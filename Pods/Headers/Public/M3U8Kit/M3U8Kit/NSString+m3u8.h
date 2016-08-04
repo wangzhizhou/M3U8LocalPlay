@@ -1,0 +1,1 @@
+../../../../M3U8Kit/M3U8Kit.framework/Versions/A/Headers/NSString+m3u8.h
