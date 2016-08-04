@@ -23,30 +23,25 @@
     return manager;
 }
 
--(NSString *)webRoot{
-    NSString *path = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-    
-    
-    NSString *web = [NSString stringWithFormat:@"%@/%@",path,@"m3u8"];
-    
+-(NSString *)makeValid:(NSString *)rootPath{
+
     NSFileManager *fm = [NSFileManager defaultManager];
     
-    if(![fm fileExistsAtPath:web])
+    if(![fm fileExistsAtPath:rootPath])
     {
-        [fm createDirectoryAtPath:web withIntermediateDirectories:YES attributes:nil error:nil];
-        NSLog(@"The server root directory is: %@", web);
+        [fm createDirectoryAtPath:rootPath withIntermediateDirectories:YES attributes:nil error:nil];
     }
-    return web;
+    return rootPath;
 }
 
--(void)startHTTPServer{
+-(void)startHTTPServerWithWebRoot:(NSString *)rootPath portNum:(NSInteger)port{
     httpServer = [[HTTPServer alloc] init];
     
     [httpServer setType:@"_http._tcp."];
     
-    [httpServer setPort:30000];
+    [httpServer setPort:port];
     
-    [httpServer setDocumentRoot:[self webRoot]];
+    [httpServer setDocumentRoot:[self makeValid:rootPath]];
     
     NSError *error;
     
@@ -58,14 +53,6 @@
     {
         NSLog(@"%@", error.description);
     }
-}
-
--(HTTPServer *)returnHTTPServer{
-    if(httpServer ==  nil)
-    {
-        [self startHTTPServer];
-    }
-    return httpServer;
 }
 
 -(void)stopHTTPServer{

@@ -16,10 +16,7 @@
 
 +(instancetype)shareInstance;
 
--(void)startHTTPServer;
-
--(HTTPServer *)returnHTTPServer;
-
+-(void)startHTTPServerWithWebRoot:(NSString *)rootPath portNum: (NSInteger)port;
 -(void)stopHTTPServer;
 
 @end

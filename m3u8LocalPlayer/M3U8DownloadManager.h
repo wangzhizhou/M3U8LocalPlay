@@ -8,6 +8,13 @@
 
 #import <UIKit/UIKit.h>
 
+typedef void (^CompleteBlock)(NSString *downloadFileLocalUrl);
+typedef void (^ErrorBlock)(NSError *error);
+
 @interface M3U8DownloadManager : NSObject
--(void)downloadM3U8WithFile:(NSString *)URL;
+
+-(void)downloadM3U8WithFile:(NSString *)URL completeBlock:(CompleteBlock)completeBlock errorBlock:(ErrorBlock)errorBlock;
+
+-(NSString *)getDownloadDirectory;
+-(void)cancelDownloadTask;
 @end
