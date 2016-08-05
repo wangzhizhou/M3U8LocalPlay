@@ -46,17 +46,21 @@
     
     NSError *error;
     
-    if([httpServer start:&error])
-    {
-        NSLog(@"HttpServer is started, port is: %@",@([httpServer listeningPort]));
-        NSLog(@"server request site is: http://127.0.0.1:30000");
-    }else
-    {
-        NSLog(@"%@", error.description);
+    if(![httpServer isRunning]){
+        
+        if([httpServer start:&error])
+        {
+            NSLog(@"HttpServer is started, port is: %@",@([httpServer listeningPort]));
+            NSLog(@"server request site is: http://127.0.0.1:30000");
+        }else
+        {
+            NSLog(@"%@", error.description);
+        }
     }
 }
 
 -(void)stopHTTPServer{
+    
     [httpServer stop];
 }
 
