@@ -112,8 +112,6 @@
 }
 -(void)play
 {
-    [[HTTPServerManager shareInstance] stopHTTPServer];
-
     if(nil == self.m3u8VideoLocalUrl || [self.m3u8VideoLocalUrl isEqualToString:@""])
     {
         self.m3u8VideoLocalUrl = [[NSUserDefaults standardUserDefaults] objectForKey:kLastDownloadVideoLocalUrl];
@@ -130,9 +128,7 @@
         NSURL *localM3U8Url = [NSURL URLWithString:videoUrl];
         MPMoviePlayerViewController *mpc = [[MPMoviePlayerViewController alloc] initWithContentURL:localM3U8Url];
         
-        [self presentViewController:mpc animated:YES completion:^{
-            [[HTTPServerManager shareInstance] stopHTTPServer];
-        }];
+        [self presentViewController:mpc animated:YES completion:nil];
     }
 }
 -(void)clearCahceBtnPress

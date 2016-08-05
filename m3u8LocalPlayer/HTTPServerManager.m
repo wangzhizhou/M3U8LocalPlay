@@ -31,6 +31,7 @@
     {
         [fm createDirectoryAtPath:rootPath withIntermediateDirectories:YES attributes:nil error:nil];
     }
+    NSLog(@"site directory is %@",rootPath);
     return rootPath;
 }
 

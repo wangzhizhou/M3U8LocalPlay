@@ -216,6 +216,7 @@ NSURLConnectionDataDelegate
 
 
 #pragma mark - NSURLConnectionDataDelegate
+
 -(void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data{
     if(DOWNLOAD_URL_LIST_FILE == self.state){
         
@@ -241,49 +242,44 @@ NSURLConnectionDataDelegate
     }
     else if(DOWNLOAD_TS_FILE == self.state)
     {
-        NSString *filePath = [NSString stringWithFormat:@"%@/%@",self.fileFolder,self.names[self.index]];
-        
-        NSMutableData *currentData = [NSMutableData dataWithContentsOfFile:filePath];
-        
-        if (currentData ==nil) {
-            currentData = [[NSMutableData alloc] init];
-        }
-        
-        [currentData appendData:self.videoSliceData];
-        
-        BOOL success = [currentData writeToFile:filePath atomically:YES];
-        
-        if (success) {
+        if(self.index < self.names.count){
             
-            self.index += 1;
+            NSString *filePath = [NSString stringWithFormat:@"%@/%@",self.fileFolder,self.names[self.index]];
             
-            if (self.index < self.urls.count) {
+            
+            BOOL success = [self.videoSliceData writeToFile:filePath atomically:YES];
+            self.videoSliceData = [[NSMutableData alloc]init];
+            
+            if (success) {
                 
-                if(self.delegate && [self.delegate respondsToSelector:@selector(currentDownloadRatio:)])
-                {
-                    CGFloat downloadRation = ((CGFloat)self.index) / self.urls.count;
-                    [self.delegate currentDownloadRatio: downloadRation];
+                if (self.index < self.urls.count) {
+                    
+                    if(self.delegate && [self.delegate respondsToSelector:@selector(currentDownloadRatio:)])
+                    {
+                        CGFloat downloadRation = ((CGFloat)self.index) / (self.urls.count - 1);
+                        [self.delegate currentDownloadRatio: downloadRation];
+                    }
                 }
                 
-                [self requestTSData];
-
-            }
-            
-            //下载完成
-            if(self.index == self.urls.count)
+                self.index += 1;
+                //下载完成
+                if(self.index == self.urls.count)
+                {
+                    self.state = DOWNLOAD_COMPLETE;
+                    
+                    if(self.complete)
+                    {
+                        self.complete([self.m3u8VideoLocalUrl copy]);
+                    }
+                }else
+                {
+                    [self requestTSData];
+                }
+            }else
             {
-                self.state = DOWNLOAD_COMPLETE;
-                
-                if(self.complete)
-                {
-                    self.complete([self.m3u8VideoLocalUrl copy]);
-                }
+                NSLog(@"写入下载文件失败");
             }
-        }else
-        {
-            NSLog(@"写入下载文件失败");
         }
-
     }
 }
 -(void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error{
