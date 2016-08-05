@@ -105,7 +105,9 @@
         [self showAlert:@"" message:@"视频已缓存到本地"];
         
     } errorBlock:^(NSError *error) {
-        NSLog(@"download failed! %@", error.description);
+        [self hideDownloadIndicator];
+        [self.downloader cancelDownloadTask];
+        [self showAlert:@"" message:@"下载未完成"];
     }];
 }
 -(void)play
@@ -128,7 +130,9 @@
         NSURL *localM3U8Url = [NSURL URLWithString:videoUrl];
         MPMoviePlayerViewController *mpc = [[MPMoviePlayerViewController alloc] initWithContentURL:localM3U8Url];
         
-        [self presentViewController:mpc animated:YES completion:nil];
+        [self presentViewController:mpc animated:YES completion:^{
+            [[HTTPServerManager shareInstance] stopHTTPServer];
+        }];
     }
 }
 -(void)clearCahceBtnPress
