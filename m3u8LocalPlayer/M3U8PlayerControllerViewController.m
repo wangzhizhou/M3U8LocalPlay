@@ -133,7 +133,10 @@
     [alertEditor addAction:confirmAction];
     
     
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        [self hideDownloadIndicator];
+        [self.downloader cancelDownloadTask];
+    }];
     
     [alertEditor addAction:cancelAction];
     
