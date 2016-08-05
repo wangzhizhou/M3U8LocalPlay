@@ -259,9 +259,14 @@ NSURLConnectionDataDelegate
             
             if (self.index < self.urls.count) {
                 
-                [self requestTSData];
+                if(self.delegate && [self.delegate respondsToSelector:@selector(currentDownloadRatio:)])
+                {
+                    CGFloat downloadRation = ((CGFloat)self.index) / self.urls.count;
+                    [self.delegate currentDownloadRatio: downloadRation];
+                }
                 
-                NSLog(@"下载第%@个视频段",@(self.index));
+                [self requestTSData];
+
             }
             
             //下载完成
