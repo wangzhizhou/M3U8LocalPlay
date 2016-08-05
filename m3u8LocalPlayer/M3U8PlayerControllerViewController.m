@@ -14,7 +14,7 @@
 #import "HTTPServerManager.h"
 
 @interface M3U8PlayerControllerViewController () <M3U8DownloadManagerDelegate>
-
+@property (nonatomic, strong)   NSString *m3u8DownloadUrl;
 @property (nonatomic ,strong)   NSString *m3u8VideoLocalUrl;
 @property (nonatomic, strong)   UIActivityIndicatorView *downloadIndicator;
 @property (nonatomic, strong)   M3U8DownloadManager *downloader;
@@ -88,28 +88,63 @@
 -(void)showM3U8UrlEditor
 {
     
+    NSString *msg = [NSString stringWithFormat:@"默认下载地址:\n %@",kSrcURL];
+    
+    UIAlertController *alertEditor = [UIAlertController alertControllerWithTitle:@"M3U8链接地址" message:msg preferredStyle:UIAlertControllerStyleAlert];
+    
+    [alertEditor addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"请输入m3u8文件url";
+        textField.autocorrectionType = UITextAutocorrectionTypeNo;
+        textField.adjustsFontSizeToFitWidth = YES;
+        textField.keyboardType = UIKeyboardTypeURL;
+        textField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        textField.returnKeyType = UIReturnKeyDone;
+    }];
+    
+    UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        UITextField *urlTextField = alertEditor.textFields.firstObject;
+        self.m3u8DownloadUrl = urlTextField.text;
+        
+        
+        [self deleteAllCacheFiles];
+        [self showDownloadIndicator];
+        
+        
+        if(!self.m3u8DownloadUrl || [self.m3u8DownloadUrl isEqualToString:@""])
+        {
+            self.m3u8DownloadUrl = kSrcURL;
+        }
+        
+        [self.downloader downloadM3U8WithFile:self.m3u8DownloadUrl completeBlock:^(NSString *downloadFileLocalUrl) {
+            self.m3u8VideoLocalUrl = downloadFileLocalUrl;
+            
+            [self hideDownloadIndicator];
+            [self showAlert:@"" message:@"视频已缓存到本地"];
+            
+        } errorBlock:^(NSError *error) {
+            [self hideDownloadIndicator];
+            [self.downloader cancelDownloadTask];
+            [self showAlert:@"" message:@"下载未完成"];
+        }];
+
+    }];
+    
+    [alertEditor addAction:confirmAction];
+    
+    
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
+    
+    [alertEditor addAction:cancelAction];
+    
+    [self presentViewController:alertEditor animated:YES completion:nil];
 }
 
 -(void)download
 {
-    
     [self showM3U8UrlEditor];
-    
-    [self deleteAllCacheFiles];
-    [self showDownloadIndicator];
-    
-    [self.downloader downloadM3U8WithFile:kSrcURL completeBlock:^(NSString *downloadFileLocalUrl) {
-        self.m3u8VideoLocalUrl = downloadFileLocalUrl;
-        
-        [self hideDownloadIndicator];
-        [self showAlert:@"" message:@"视频已缓存到本地"];
-        
-    } errorBlock:^(NSError *error) {
-        [self hideDownloadIndicator];
-        [self.downloader cancelDownloadTask];
-        [self showAlert:@"" message:@"下载未完成"];
-    }];
 }
+
 -(void)play
 {
     if(nil == self.m3u8VideoLocalUrl || [self.m3u8VideoLocalUrl isEqualToString:@""])
@@ -120,9 +155,15 @@
     if(self.m3u8VideoLocalUrl && ![self.m3u8VideoLocalUrl isEqualToString:@""]){
         
         NSString *m3u8FileName = [self.m3u8VideoLocalUrl lastPathComponent];
+        NSString *m3u8FileDirectory = [self.m3u8VideoLocalUrl stringByReplacingOccurrencesOfString:m3u8FileName withString:@""];
         
-        [[HTTPServerManager shareInstance] startHTTPServerWithWebRoot:[self.m3u8VideoLocalUrl stringByReplacingOccurrencesOfString:m3u8FileName withString:@""] portNum:30000];
+        self.m3u8VideoLocalUrl = [NSString stringWithFormat:@"%@/%@/%@",[self.downloader getDownloadDirectory], m3u8FileDirectory.lastPathComponent, m3u8FileName];
         
+        NSString *serverRootPath = [self.m3u8VideoLocalUrl stringByReplacingOccurrencesOfString:m3u8FileName withString:@""];
+        
+        [[HTTPServerManager shareInstance] startHTTPServerWithWebRoot:serverRootPath portNum:30000];
+        
+        NSLog(@"cache directory: %@",[self.downloader getDownloadDirectory]);
         NSString *videoUrl = [NSString stringWithFormat:@"%@/%@",kLocalLoopURL, m3u8FileName];
         
         NSURL *localM3U8Url = [NSURL URLWithString:videoUrl];
